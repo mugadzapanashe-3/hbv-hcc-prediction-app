@@ -45,7 +45,7 @@ with st.expander("ℹ How to use this tool"):
     - Select mutation status:
         - Absent = mutation not present
         - Present = mutation detected
-    - Select genotype (A–F)
+    - Select genotype (only supported ones)
     - Click Predict
 
     Output:
@@ -70,32 +70,76 @@ G1899A = mutation_input("G1899A", col2)
 C1653T = mutation_input("C1653T", col2)
 T1753V = mutation_input("T1753V", col2)
 
-# Genotype
-genotype = st.selectbox("Select Genotype", ["A","B","C","D","E","F"])
-genotype_map = {"A":1,"B":2,"C":3,"D":4,"E":5,"F":6}
-genotype = genotype_map[genotype]
+# -------------------- GENOTYPE --------------------
+st.subheader("🧬 Genotype Selection")
+
+genotype_options = ["A", "B", "C", "Not Supported"]
+genotype = st.selectbox("Select Genotype", genotype_options)
+
+genotype_map = {"A":1, "B":2, "C":3}
 
 # -------------------- PREDICTION --------------------
 if st.button("🔬 Run Prediction"):
 
-    input_data = np.array([[A1762T, G1764A, G1896A, G1899A, C1653T, T1753V, genotype]])
-
-    prediction = model.predict(input_data)[0]
-    probability = model.predict_proba(input_data)[0][1]
-
-    st.subheader("📊 Prediction Result")
-
-    if prediction == 1:
-        st.error(f"⚠ High Risk of HCC\n\nProbability: {probability:.2f}")
+    if genotype == "Not Supported":
+        st.error("❌ Selected genotype is not supported by this model.\n\nPlease choose A, B, or C.")
+    
     else:
-        st.success(f"✔ Low Risk\n\nProbability: {probability:.2f}")
+        genotype_value = genotype_map[genotype]
 
-    # Interpretation
-    st.markdown("### 🧠 Interpretation")
-    st.write("""
-    The prediction is based on learned patterns between HBV mutations and HCC occurrence.
-    A higher probability indicates stronger association with HCC in the dataset.
-    """)
+        input_data = np.array([[A1762T, G1764A, G1896A, G1899A, C1653T, T1753V, genotype_value]])
+
+        prediction = model.predict(input_data)[0]
+        probability = model.predict_proba(input_data)[0][1]
+
+        st.subheader("📊 Prediction Result")
+
+        if prediction == 1:
+            result_text = "High Risk of HCC"
+            st.error(f"⚠ {result_text}\n\nProbability: {probability:.2f}")
+        else:
+            result_text = "Low Risk (No HCC Detected)"
+            st.success(f"✔ {result_text}\n\nProbability: {probability:.2f}")
+
+        # -------------------- REPORT GENERATION --------------------
+        report = f"""
+HBV-Associated HCC Prediction Report
+-----------------------------------
+
+Mutation Inputs:
+A1762T: {A1762T}
+G1764A: {G1764A}
+G1896A: {G1896A}
+G1899A: {G1899A}
+C1653T: {C1653T}
+T1753V: {T1753V}
+
+Genotype: {genotype}
+
+Prediction Result:
+{result_text}
+
+Probability of HCC:
+{probability:.2f}
+
+-----------------------------------
+Note: This is a research prototype and not for clinical use.
+"""
+
+        # Download button
+        st.download_button(
+            label="📥 Download Report",
+            data=report,
+            file_name="HCC_prediction_report.txt",
+            mime="text/plain"
+        )
+
+        # Interpretation
+        st.markdown("### 🧠 Interpretation")
+        st.write("""
+        This prediction is based on learned relationships between HBV mutations and HCC occurrence.
+        The probability reflects how strongly the pattern matches high-risk cases in the dataset.
+        """)
 
 # -------------------- FOOTER --------------------
 st.markdown("---")
