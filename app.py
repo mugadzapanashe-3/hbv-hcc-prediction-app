@@ -45,7 +45,7 @@ with st.expander("ℹ How to use this tool"):
     - Select mutation status:
         - Absent = mutation not present
         - Present = mutation detected
-    - Select genotype (only supported ones)
+    - Select genotype
     - Click Predict
 
     Output:
@@ -73,16 +73,17 @@ T1753V = mutation_input("T1753V", col2)
 # -------------------- GENOTYPE --------------------
 st.subheader("🧬 Genotype Selection")
 
-genotype_options = ["A", "B", "C", "Not Supported"]
+genotype_options = ["A", "B", "C", "D", "E", "F"]
 genotype = st.selectbox("Select Genotype", genotype_options)
 
-genotype_map = {"A":1, "B":2, "C":3}
+genotype_map = {"A":1, "B":2, "C":3, "D":4, "F":6}
 
 # -------------------- PREDICTION --------------------
 if st.button("🔬 Run Prediction"):
 
-    if genotype == "Not Supported":
-        st.error("❌ Selected genotype is not supported by this model.\n\nPlease choose A, B, or C.")
+    # Block ONLY genotype E
+    if genotype == "E":
+        st.error("❌ Genotype E is not supported by this model because it was not present in the training dataset.")
     
     else:
         genotype_value = genotype_map[genotype]
@@ -101,7 +102,7 @@ if st.button("🔬 Run Prediction"):
             result_text = "Low Risk (No HCC Detected)"
             st.success(f"✔ {result_text}\n\nProbability: {probability:.2f}")
 
-        # -------------------- REPORT GENERATION --------------------
+        # -------------------- REPORT --------------------
         report = f"""
 HBV-Associated HCC Prediction Report
 -----------------------------------
@@ -126,7 +127,6 @@ Probability of HCC:
 Note: This is a research prototype and not for clinical use.
 """
 
-        # Download button
         st.download_button(
             label="📥 Download Report",
             data=report,
@@ -144,3 +144,5 @@ Note: This is a research prototype and not for clinical use.
 # -------------------- FOOTER --------------------
 st.markdown("---")
 st.caption("Developed for academic research purposes")
+      
+
